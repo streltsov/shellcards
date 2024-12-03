@@ -1,31 +1,18 @@
 #!/bin/bash
 
-DELIMETER="|"
+source config.sh
 
 read -e -r -p "Front: " front
 read -e -r -p "Back: " back
-read -e -r -p "Type(basic): " type
 
-record=""
-
-# TYPE
-record+=$type
+record="0"
 record+=$DELIMETER
-
-# BOX
-record+="0"
-record+=$DELIMETER
-
-# REVIEW DATE
 record+=$(date +"%Y-%m-%d %H:%M:%S")
 record+=$DELIMETER
-
-# FRONTSIDE
 record+=$front
 record+=$DELIMETER
-
-# BACKSIDE
 record+=$back
 
+[ -e "$DECK_PATH" ] || touch "$DECK_PATH"
 
-echo "$record" >> ~/shared-2/.deck.csv
+echo "$record" >> "$DECK_PATH"

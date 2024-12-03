@@ -1,14 +1,17 @@
 #!/bin/bash
 
-deck_file="/home/streltsov/shared-2/.deck.csv"
-INTERVALS=(120 600 3600 18000 86400 432000 1036800 2160000 10368000)
+source config.sh
+# TODO: Skip records which are in TOP BOX
+# TODO: Rename record to card
+# TODO: Polish texts
 
+[ -e "$DECK_PATH" ] || touch "$DECK_PATH"
 
 ready_to_review=""
 
 # Find cards ready to review
 while IFS= read -r record; do
-  IFS="|" read -r _type _box date _front _back  <<< "$record"
+  IFS="|" read -r _box date _front _back  <<< "$record"
   review_date_seconds=$(date -d "$date" +%s 2>/dev/null)
   current_date_seconds=$(date +%s)
 
@@ -16,14 +19,13 @@ while IFS= read -r record; do
     ready_to_review+="$record"
     ready_to_review+=$'\n'
   fi
-done < "$deck_file"
+done < "$DECK_PATH"
 
 # TODO: Fix this IFS reassigning
 IFS=$'\n'
 for record in $ready_to_review; do
-  IFS="|" read -r type box date front back  <<< "$record"
+  IFS="|" read -r box date front back  <<< "$record"
 
-  if [ "$type" == basic ]; then
     echo "$front"
 
     while true; do
@@ -34,8 +36,8 @@ for record in $ready_to_review; do
         _current_date_seconds=$(date +%s)
         updated_date_seconds=$((_current_date_seconds + INTERVALS[updated_box]))
         updated_date=$(date -d "@$updated_date_seconds" +"%Y-%m-%d %H:%M:%S")
-        updated_record="$type|$updated_box|$updated_date|$front|$back"
-        sed -i "s/${record}/${updated_record}/g" "$deck_file"
+        updated_record="$updated_box|$updated_date|$front|$back"
+        sed -i "s/${record}/${updated_record}/g" "$DECK_PATH"
         echo "$back"
         break
       fi
@@ -45,20 +47,20 @@ for record in $ready_to_review; do
         _current_date_seconds=$(date +%s)
         updated_date_seconds=$((_current_date_seconds + INTERVALS[updated_box]))
         updated_date=$(date -d "@$updated_date_seconds" +"%Y-%m-%d %H:%M:%S")
-        updated_record="$type|$updated_box|$updated_date|$front|$back"
-        sed -i "s/${record}/${updated_record}/g" "$deck_file"
+        updated_record="$updated_box|$updated_date|$front|$back"
+        sed -i "s/${record}/${updated_record}/g" "$DECK_PATH"
         echo "$back"
         break
       fi
     done
 
 
+    # TODO: Proceed with enter
     while true; do
-      read -r -e -p "Proceed? (y)" answer
+      read -r -e -p "Proceed? (Y)" answer
       if [ y == "$answer" ]; then
         break
       fi
     done
-  fi
 IFS=$'\n'
 done
