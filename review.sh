@@ -4,16 +4,14 @@ source config.sh
 
 ask() {
   while true; do
-    read -e -r -p "$1 (Y/n): " response
+    read -e -r -p "$1 (Y/n): " response < /dev/tty
     response=${response,,}
     [[ -z "$response" || "$response" == "y" || "$response" == "n" ]] && break
   done
 
-    [[ -z "$response" || "$response" == "y" ]] && return 0
-    [[ "$response" == "n" ]] && return 0
+  [[ -z "$response" || "$response" == "y" ]] && return 0 || return 1
 }
-
-# TODO: Skip records which are in TOP BOX
+# TODO: move_up() { tput cuu "$1"; }
 
 [ -e "$DECK_PATH" ] || touch "$DECK_PATH"
 
@@ -21,19 +19,13 @@ ready_to_review=""
 
 while IFS= read -r card; do
   IFS="|" read -r _box date _front _back  <<< "$card"
-
-  if (( $(date -d "$date" +%s) < $(date +%s) )); then
-    ready_to_review+="$card"$'\n'
-  fi
+  [[ "$box" == "${#INTERVALS[@]}" ]] && continue
+  [[ $(date -d "$date" +%s) -lt $(date +%s) ]] && ready_to_review+="$card"$'\n'
 done < "$DECK_PATH"
 
-# TODO: Fix this IFS reassigning
-IFS=$'\n'
-for card in $ready_to_review; do
-  IFS="|" read -r box date front back  <<< "$card"
-
+while IFS="|" read -r box date front back; do
   echo -e "\n  [ $front ]\n"
-  read -r -p "Hit return to show back side"
+  read -r -p "Hit return to show back side" < /dev/tty
   echo -e "\033[4A\n  [ $front ] [ $back ]\n"
 
   updated_box=$(ask "Did you remember it?" && echo $((box + 1)) || echo 0)
@@ -43,5 +35,4 @@ for card in $ready_to_review; do
   sed -i "s/${card}/${updated_card}/g" "$DECK_PATH"
 
   echo -e "\033[3A"
-  IFS=$'\n'
-done
+done <<< "$ready_to_review"
