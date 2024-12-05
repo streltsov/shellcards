@@ -2,14 +2,13 @@
 
 set -euo pipefail
 source config.sh
-DATE_FORMAT="+%Y-%m-%d %H:%M:%S"
 
 while true; do
   read -e -r -p "Front: " front
   read -e -r -p "Back: " back
 
   box=0
-  seconds=$(($(date +%s) + ${INTERVALS[box]}))
+  seconds=$(($(date +%s) + INTERVALS[box]))
   date=$(date -d "@$seconds" "$DATE_FORMAT")
   record="0$DELIMETER$date$DELIMETER$front$DELIMETER$back"
 
