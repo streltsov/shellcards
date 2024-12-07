@@ -4,6 +4,7 @@ set -euo pipefail
 source config.sh
 
 while true; do
+  echo
   read -e -r -p "Front: " front
   read -e -r -p "Back: " back
 
